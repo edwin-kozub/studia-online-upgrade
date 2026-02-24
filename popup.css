@@ -1,0 +1,57 @@
+body {
+    width: 250px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 15px;
+    background-color: #f7f9fa;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #0b5394;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+    text-align: center;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+input[type="number"] {
+    width: 50px;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px;
+    background-color: #0b5394;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #073763;
+}
+
+#status {
+    color: #2e7d32;
+    font-size: 0.9rem;
+    text-align: center;
+    min-height: 20px;
+}

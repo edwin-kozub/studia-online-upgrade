@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>WSKZ Extension Setup</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Ustawienia WSKZ</h2>
+
+        <div class="setting-row">
+            <label for="autoClickEnabled">Auto-klik (Następny):</label>
+            <input type="checkbox" id="autoClickEnabled">
+        </div>
+
+        <div class="setting-row">
+            <label for="clickInterval">Interwał (sekundy):</label>
+            <input type="number" id="clickInterval" min="1" value="60">
+        </div>
+
+        <button id="saveBtn">Zapisz ustawienia</button>
+        <div id="status"></div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

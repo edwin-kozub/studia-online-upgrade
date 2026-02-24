@@ -28,6 +28,16 @@
         "content.js"
       ],
       "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://studia-online.pl/*"
+      ],
+      "js": [
+        "scroll_patch.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ]
 }

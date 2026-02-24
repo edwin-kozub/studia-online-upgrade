@@ -54,46 +54,8 @@ function attemptNextClick() {
         if (!nextBtn.disabled) {
             console.log("Auto Clicker: Dodaję auto kliknięcie w przycisk NEXT...");
 
-            // Skrypt tymczasowo blokujący jakiekolwiek automatyczne przewijanie ekranu po interakcji autoklikera
-            const preventScrollScript = document.createElement('script');
-            preventScrollScript.textContent = `
-                window._wskzPreventScroll = true;
-                setTimeout(() => window._wskzPreventScroll = false, 800);
-                
-                if (!window._wskzScrollPatched) {
-                    window._wskzScrollPatched = true;
-                    
-                    const origScrollTo = window.scrollTo;
-                    window.scrollTo = function() {
-                        if (window._wskzPreventScroll) return;
-                        origScrollTo.apply(this, arguments);
-                    };
-                    
-                    const origScrollBy = window.scrollBy;
-                    window.scrollBy = function() {
-                        if (window._wskzPreventScroll) return;
-                        origScrollBy.apply(this, arguments);
-                    };
-                    
-                    const origSIV = Element.prototype.scrollIntoView;
-                    Element.prototype.scrollIntoView = function() {
-                        if (window._wskzPreventScroll) return;
-                        origSIV.apply(this, arguments);
-                    };
-                    
-                    if (typeof jQuery !== 'undefined') {
-                        const origAnimate = jQuery.fn.animate;
-                        jQuery.fn.animate = function(props) {
-                            if (window._wskzPreventScroll && (props.scrollTop !== undefined || props.scrollLeft !== undefined)) {
-                                return this;
-                            }
-                            return origAnimate.apply(this, arguments);
-                        };
-                    }
-                }
-            `;
-            document.documentElement.appendChild(preventScrollScript);
-            preventScrollScript.remove();
+            // Wyślij sygnał do skryptu w świecie MAIN, aby na chwilę zablokował przewijanie
+            window.postMessage({ type: "WSKZ_PREVENT_SCROLL" }, "*");
 
             nextBtn.click();
             return;

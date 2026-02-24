@@ -26,7 +26,7 @@ Rozszerzenie do przeglądarki Chrome stworzone, aby wspierać efektywną naukę 
 Aby dodać asystenta do swojej przeglądarki, wykonaj poniższe kroki:
 
 1. Zapisz folder z rozszerzeniem w bezpiecznym miejscu na dysku (np. w folderze *Dokumenty*).
-2. Otwórz przeglądarkę **Google Chrome**.
+2. Otwórz przeglądarkę **Google Chrome**, **Brave** lub inną opartą na Chromium.
 3. W pasku adresu wpisz: `chrome://extensions/` i naciśnij Enter.
 4. Włącz **Tryb programisty** (Developer mode) w prawym górnym rogu.
 5. Wybierz przycisk **"Załaduj rozpakowane"** (Load unpacked).

@@ -1,43 +1,71 @@
-# WSKZ Auto Clicker & Downloader
+# Auto Clicker & Downloader — rozszerzenie Chrome
 
-Rozszerzenie do przeglądarki Chrome stworzone specjalnie, aby ułatwić i zautomatyzować korzystanie z platformy **studia-online.pl (WSKZ)**.
+Rozszerzenie do przeglądarki Chrome automatyzujące nawigację, pobieranie plików i zarządzanie nazwami na platformie e-learningowej.
 
-## 🚀 Co potrafi ta wtyczka?
+---
+
+## Co potrafi ta wtyczka?
 
 1. **Automatyczne przechodzenie lekcji (Auto-Clicker)**
-   Wtyczka samoczynnie klika przycisk "Następny", dzięki czemu nie musisz ręcznie przewijać i odklikiwać prezentacji czy PDF-ów. Czas (interwał) pomiędzy kliknięciami możesz płynnie modyfikować z poziomu wygodnego menu po kliknięciu ikonki wtyczki!
-2. **Pobieranie plików PDF z poprawnymi nazwami**
-   Rozszerzenie ukrycie sprawdza nazwę Twojej lekcji i numerację (np. `1.1.1. Koncepcje...`). Na pasku nad każdym PDF-em wyświetli mały przycisk **"Pobierz PDF"**. Kliknięcie gwarantuje, że plik od razu zapisze się w uporządkowanym formacie na Twoim dysku.
-3. **Inteligentne kopiowanie nazw**
-   Wtyczka dodaje widoczność numeracji (np. `1.1.2...`) bezpośrednio w pogrubionym tytule na ekranie. Tytuł jest wyróżniony na niebiesko – kiedy w niego klikniesz, pełna wygenerowana nazwa zostanie błyskawicznie **skopiowana do systemowego schowka** (pojawia się zielony komunikat "Skopiowano!"). Bardzo przydatne do błyskawicznego zapisywania wideo ("Zapisz jako..."), gdzie samemu trzeba wkleić nazwę.
-4. **Odblokowanie menu "Prawego Kliknięcia"**
-   Platforma często blokuje prawy przycisk myszy np. na odtwarzaczach wideo. Skrypt wtyczki to znosi, zdejmując domyślną blokadę. Śmiało możesz pobierać wideo klasycznie – korzystając z menu i opcji "Zapisz wideo jako..." lub poprzez dodatki pobierające.
-5. **Gładkość (Anti-Scrolling)**
-   Skrypt blokuje agresywne dociąganie/przewijanie strony generowane przez platformę w momencie zmiany materiału przez nasz Auto-Clicker. Ekran stoi w miejscu!
+   Wtyczka samoczynnie przechodzi do kolejnych stron PDF-ów i lekcji, dzięki czemu nie musisz ręcznie przewijać i odklikiwać materiałów. Interwał między przejściami ustawiasz z poziomu menu po kliknięciu ikonki wtyczki.
+
+2. **Symulacja aktywnej karty**
+   Wtyczka sprawia, że platforma widzi kartę jako aktywną nawet gdy pracujesz w innym oknie lub na innej karcie. Czas nauki nalicza się w tle bez przerw. Nie potrzebujesz już żadnych dodatkowych rozszerzeń typu "Always Active Window".
+
+3. **Pobieranie plików PDF z poprawnymi nazwami**
+   Rozszerzenie sprawdza nazwę lekcji i numerację (np. `1.1.1. Koncepcje...`). Na pasku nad każdym PDF-em wyświetla przycisk **"Pobierz PDF"**. Kliknięcie zapisuje plik w uporządkowanym formacie na dysku.
+
+4. **Inteligentne kopiowanie nazw**
+   Wtyczka dodaje pełną numerację (np. `1.1.2...`) w pogrubionym tytule na ekranie. Tytuł jest wyróżniony na niebiesko — kliknięcie kopiuje wygenerowaną nazwę do schowka (pojawia się zielony komunikat "Skopiowano!"). Przydatne do zapisywania wideo przez "Zapisz jako...".
+
+5. **Odblokowanie prawego kliknięcia**
+   Platforma blokuje prawy przycisk myszy na odtwarzaczach wideo. Wtyczka znosi tę blokadę — możesz korzystać z menu kontekstowego i opcji "Zapisz wideo jako..." lub dodatków pobierających.
+
+6. **Anti-Scrolling**
+   Skrypt blokuje agresywne przewijanie strony generowane przez platformę w momencie zmiany materiału przez Auto-Clicker. Ekran zostaje w miejscu.
 
 ---
 
-## 🛠️ Instalacja krok po kroku (tryb dla każdego)
+## Instalacja
 
-Aby zainstalować naszą wtyczkę w przeglądarce Chrome, **nie potrzebujesz żadnej specjalistycznej wiedzy programistycznej**. Przejdź po kolei przez poniższe kroki:
+1. Zapisz cały folder z wtyczką w bezpieczne miejsce na dysku (np. folder *Dokumenty*).
+2. Otwórz **Google Chrome**.
+3. W pasku adresu wpisz `chrome://extensions/` i naciśnij Enter.
+4. W prawym górnym rogu włącz **Tryb programisty** (*Developer mode*).
+5. Kliknij **"Załaduj rozpakowane"** (*Load unpacked*).
+6. Wskaż folder z wtyczką (zawierający `manifest.json`) i zatwierdź.
+7. Gotowe — ikona wtyczki pojawi się obok paska adresu.
 
-1. Zapisz cały ten folder ze skryptami (np. rozpakowany plik ZIP z wtyczką) w bezpieczne miejsce na dysku – np. do folderu *Dokumenty* na swoim komputerze.
-2. Otwórz przeglądarkę **Google Chrome**.
-3. W pasku adresu przeglądarki (tam gdzie wpisujesz adresy stron) wpisz poniższy tekst i wciśnij "Enter":
-   `chrome://extensions/`
-4. Na stronie z rozszerzeniami spójrz w **prawy górny róg** i znajdź przełącznik nazwany **Tryb programisty** (ang. *Developer mode*). Kliknij go, aby go WŁĄCZYĆ.
-5. Po lewej stronie górnego paska pojawią się nowe opcje. Wybierz przycisk **"Załaduj rozpakowane"** (ang. *Load unpacked*).
-6. Wyskoczy okienko wyboru plików. Wskaż w nim **główny folder z tą wtyczką** (ten zawierający między innymi plik `manifest.json`) i zatwierdź.
-7. Gotowe! Wtyczka pojawi się na liście i powinna być widoczna przypięta (lub pod ikonką "Puzzla") w prawym górnym rogu pod paskiem adresu.
-
-Kliknij jej ikonę, aby wysunąć panel ułatwień, zaznacz okienko włączające Auto-Klikacz i dopasuj czas (sekundy) do własnych potrzeb! Zmiany zapisują się i działają natychmiast, bez konieczności resetowania strony!
+Kliknij ikonę wtyczki, zaznacz Auto-Klikacz i ustaw interwał w sekundach. Zmiany działają natychmiast, bez odświeżania strony.
 
 ---
 
-## ⏳ Ważne: Wymagane osobne rozszerzenie podtrzymujące obecność
+## Changelog
 
-Skrypty studenckie lubią blokować naliczanie czasu, gdy wejdziesz w inną zakładkę bądź ukryjesz okno na pasku zadań. Nasza wtyczka skupia się w pełni na ułatwianiu obsługi. Aby platforma widziała Cię "wiecznie online", zainstaluj dedykowane, popularne rozwiązanie, które świetnie z nią współpracuje:
+### v1.1 — Symulacja aktywnej karty + nawigacja PDF bez scrollowania
 
-👉 **[Pobierz Always Active Window - Always Visible (Chrome Web Store)](https://chromewebstore.google.com/detail/always-active-window-alwa/ehllkhjndgnlokhomdlhgbineffifcbj)**
+**Nowe funkcje:**
 
-Instalacja następuje klasycznie przez sklep poprzez kliknięcie fioletowego przycisku **"Dodaj do Chrome"**. Pamiętaj tylko, aby w opcjach tamtej wtyczki, platforma studiów faktycznie widniała jako zawsze aktywna!
+- **Wbudowana symulacja aktywnej karty** — wtyczka nadpisuje mechanizmy wykrywania fokusu bezpośrednio w kontekście strony. Platforma widzi kartę jako aktywną nawet gdy jest w tle. Zbędne stało się osobne rozszerzenie "Always Active Window".
+- **Automatyczne zamykanie modala ostrzeżenia** — jeśli platforma wyświetli modal "nie skupiasz się na nauce", wtyczka zamyka go natychmiast i zapobiega ponownemu pojawieniu.
+
+**Zmiany:**
+
+- **Nawigacja PDF przez input numeru strony** — zamiast klikać przycisk "Następny" wewnątrz PDF (co powodowało uciążliwe przewijanie strony do kontenera), wtyczka wpisuje numer następnej strony w pole tekstowe i wciska Enter. Strona PDF zmienia się bez żadnego scrollowania.
+- **Rozdzielenie przycisków PDF i lekcji** — przycisk "następna lekcja" klikany jest tylko gdy nie ma PDF-a do przewinięcia, lub gdy PDF jest na ostatniej stronie.
+
+**Szczegóły techniczne (v1.1):**
+
+- `scroll_patch.js` (świat MAIN, document_start) — trzy moduły:
+  - Moduł 1: nadpisanie `hasFocus()`, `document.hidden`, `document.visibilityState`; blokowanie eventów `blur`, `pagehide`, `visibilitychange` w fazie capture
+  - Moduł 2: anty-scroll (bez zmian)
+  - Moduł 3: suppresja modala `isActiveModal` przez `sessionStorage` + MutationObserver
+- `content.js` — nowa funkcja `attemptNextPage()` zastępuje `attemptNextClick()`; nawigacja przez `nativeInputValueSetter` + dispatch `KeyboardEvent('Enter')`
+
+### v1.0 — Wersja początkowa
+
+- Auto-Clicker z konfigurowalnym interwałem
+- Pobieranie PDF z inteligentnym nazewnictwem
+- Kopiowanie nazw do schowka
+- Odblokowanie prawego kliknięcia
+- Anti-Scrolling

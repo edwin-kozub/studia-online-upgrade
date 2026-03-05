@@ -150,12 +150,29 @@ function attemptNextLesson() {
 // =========================================================================
 
 function extractCourseNumber() {
-    const courseTopicLink = document.querySelector('.course-topic__link');
-    if (courseTopicLink) {
-        const text = courseTopicLink.textContent.trim();
+    // Strategia: znajdź aktywną lekcję, przejdź w górę do jej tematu (przedmiotu)
+    const activeLesson = document.querySelector('.course-lesson--active');
+    if (activeLesson) {
+        // Szukamy rodzica z klasą .course-topic (BEM: blok nadrzędny)
+        const parentTopic = activeLesson.closest('.course-topic');
+        if (parentTopic) {
+            const topicLink = parentTopic.querySelector('.course-topic__link');
+            if (topicLink) {
+                const text = topicLink.textContent.trim();
+                const match = text.match(/^(\d+)\./);
+                if (match) return match[1] + ".";
+            }
+        }
+    }
+
+    // Fallback: szukaj klasy --active na poziomie tematu
+    const activeTopicLink = document.querySelector('.course-topic--active .course-topic__link');
+    if (activeTopicLink) {
+        const text = activeTopicLink.textContent.trim();
         const match = text.match(/^(\d+)\./);
         if (match) return match[1] + ".";
     }
+
     return "X.";
 }
 

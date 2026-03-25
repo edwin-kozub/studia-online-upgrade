@@ -42,6 +42,25 @@ Kliknij ikonę wtyczki, zaznacz Auto-Klikacz i ustaw interwał w sekundach. Zmia
 
 ## Changelog
 
+### v1.5 — Anty-throttling: pełna prędkość naliczania czasu w tle
+
+**Problem:** Przeglądarki Chromium (Chrome, Brave, Edge) po ~5 minutach w tle spowalniają timery strony do max 1 wywołania na minutę. Przez to czas nauki naliczał się nawet **60x wolniej** gdy karta była w tle — mimo włączonej symulacji skupienia.
+
+**Rozwiązanie:**
+
+- **Web Worker timer** — wtyczka przechwytuje timer platformy i przenosi go do Web Workera, który **nie podlega ograniczeniom przeglądarki** dla kart w tle. Czas nauki nalicza się z pełną prędkością niezależnie od tego, czy karta jest aktywna.
+- **Fallback kompensacyjny** — jeśli strona blokuje tworzenie Workera (polityka CSP), wtyczka automatycznie nadrabia pominięte sekundy przy każdym wywołaniu timera.
+
+**Efekt:** Ticki ACTIVE lecą co 25 sekund bez przerw, nawet gdy pracujesz na innej karcie lub w innej aplikacji.
+
+**Szczegóły techniczne (v1.5):**
+
+- `scroll_patch.js` — nowy Moduł 1b (anty-throttling):
+  - Strategia A: inline Web Worker (blob URL) przejmuje `setInterval` dla interwałów ~1000ms
+  - Strategia B (fallback): kompensacja opóźnionych wywołań — przy throttlowanym odpaleniu callback wykonywany jest `Math.round(elapsed/ms)` razy
+  - Przechwycenie `setInterval`/`clearInterval` z zachowaniem kompatybilności ID
+- Zaktualizowano dokumentację mechanizmu śledzenia platformy (konfigurowalny `materialInterval`)
+
 ### v1.4 — Historia nauki, statystyki i monitoring sesji
 
 **Nowe funkcje:**

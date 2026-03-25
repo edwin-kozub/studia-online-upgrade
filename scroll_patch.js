@@ -20,7 +20,7 @@
     //    Platforma (user-lesson-log-only-focus.min.js) co 1 sekundę sprawdza:
     //      isVisible && getIsVisible()
     //    Jeśli true → activeSeconds++ (lokalny licznik w przeglądarce)
-    //    Co 25 sekund (activeSeconds - lastTickSent >= 25) → POST /ajax/user-lesson-log-tick
+    //    Co N sekund (materialInterval z serwera, domyślnie 25) → POST /ajax/user-lesson-log-tick
     //
     //    getIsVisible() sprawdza:
     //      Desktop: document.hasFocus()
@@ -28,6 +28,11 @@
     //
     //  WAŻNE: scroll_patch.js musi działać w world: "MAIN" i run_at: "document_start"
     //  żeby nadpisania były gotowe ZANIM załaduje się kod platformy.
+    //
+    //  ANTY-THROTTLING (Moduł 1b):
+    //    Chromium/Brave throttluje setInterval w kartach w tle do ~1/min.
+    //    Moduł 1b przechwytuje setInterval(fn, 1000) i kieruje go przez
+    //    Web Worker (który nie jest throttlowany) lub kompensuje utracone ticki.
     // =========================================================================
 
     // --- 1a. Nadpisanie document.hasFocus() ---
@@ -69,6 +74,79 @@
     document.addEventListener('visibilitychange', (e) => {
         if (window.__wskzFocusSimEnabled) e.stopImmediatePropagation();
     }, true);
+
+    // =========================================================================
+    //  MODUŁ 1b: Anty-throttling — ochrona przed spowolnieniem timerów w tle
+    // =========================================================================
+    //
+    //  PROBLEM: Chromium/Brave po ~5 min w tle ogranicza setInterval
+    //    do max 1 wywołania/minutę. Platformowy master interval (1s)
+    //    liczy activeSeconds+=1 co wywołanie — w tle rośnie ~60x wolniej.
+    //
+    //  STRATEGIA A: Web Worker timer (nie podlega throttlingowi).
+    //  STRATEGIA B (fallback CSP): kompensacja — przy każdym opóźnionym
+    //    wywołaniu nadrabiamy pominięte ticki.
+    // =========================================================================
+
+    (function installAntiThrottle() {
+        const origSetInterval = window.setInterval;
+        const origClearInterval = window.clearInterval;
+
+        // --- Próba utworzenia Web Workera ---
+        let worker = null;
+        try {
+            const code = 'const T=new Map();self.onmessage=e=>{const d=e.data;if(d.c==="s"){T.set(d.i,setInterval(()=>self.postMessage(d.i),d.m))}else if(d.c==="x"){clearInterval(T.get(d.i));T.delete(d.i)}};';
+            worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+        } catch (e) { /* CSP blokuje blob: Worker — fallback B */ }
+
+        if (worker) {
+            // === STRATEGIA A: Web Worker — dokładny timer nawet w tle ===
+            const cbs = new Map();
+            let fakeId = 900000;
+
+            worker.onmessage = function (e) {
+                const fn = cbs.get(e.data);
+                if (fn) fn();
+            };
+
+            window.setInterval = function (fn, ms) {
+                if (typeof fn === 'function' && ms >= 900 && ms <= 1100) {
+                    const id = fakeId++;
+                    const args = Array.prototype.slice.call(arguments, 2);
+                    cbs.set(id, function () { fn.apply(null, args); });
+                    worker.postMessage({ c: 's', i: id, m: ms });
+                    return id;
+                }
+                return origSetInterval.apply(window, arguments);
+            };
+
+            window.clearInterval = function (id) {
+                if (cbs.has(id)) {
+                    worker.postMessage({ c: 'x', i: id });
+                    cbs.delete(id);
+                } else {
+                    origClearInterval.call(window, id);
+                }
+            };
+        } else {
+            // === STRATEGIA B: kompensacja utraconych ticków ===
+            window.setInterval = function (fn, ms) {
+                if (typeof fn === 'function' && ms >= 900 && ms <= 1100) {
+                    const args = Array.prototype.slice.call(arguments, 2);
+                    let lastCall = Date.now();
+                    return origSetInterval.call(window, function () {
+                        const now = Date.now();
+                        const ticks = Math.max(1, Math.round((now - lastCall) / ms));
+                        lastCall = now;
+                        for (let i = 0; i < ticks; i++) {
+                            fn.apply(null, args);
+                        }
+                    }, ms);
+                }
+                return origSetInterval.apply(window, arguments);
+            };
+        }
+    })();
 
     // --- 3. Heartbeat (WARUNKOWY) ---
     setInterval(() => {

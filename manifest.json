@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WSKZ Auto Clicker & Downloader",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Automatyzuje klikanie przycisku 'następny', pobieranie wideo (WebM) i PDF z platformy studia-online.pl",
   "permissions": [
     "storage",

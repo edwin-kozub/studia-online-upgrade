@@ -23,49 +23,55 @@ const lessonKey = location.pathname.replace(/^\/+|\/+$/g, '');
 let initialDataLoaded = false;
 let cachedInitials = null; // { materials: [{id, initialPercent}], initialLessonPercent }
 
-chrome.storage.sync.get(['clickInterval', 'autoClickEnabled', 'focusSimEnabled'], (result) => {
-    clickInterval = result.clickInterval !== undefined ? result.clickInterval : 60;
-    autoClickEnabled = result.autoClickEnabled !== undefined ? result.autoClickEnabled : false;
-    focusSimEnabled = result.focusSimEnabled !== undefined ? result.focusSimEnabled : true;
+try {
+    chrome.storage.sync.get(['clickInterval', 'autoClickEnabled', 'focusSimEnabled'], (result) => {
+        if (chrome.runtime.lastError || !isContextValid()) return;
+        clickInterval = result.clickInterval !== undefined ? result.clickInterval : 60;
+        autoClickEnabled = result.autoClickEnabled !== undefined ? result.autoClickEnabled : false;
+        focusSimEnabled = result.focusSimEnabled !== undefined ? result.focusSimEnabled : true;
 
-    if (autoClickEnabled) {
-        startAutoClicker();
-    }
-
-    // Wyślij stan skupienia do MAIN world (scroll_patch.js)
-    syncFocusSim();
-
-    insertDownloadButtonsAndModifyTitles();
-    updateTitle();
-    updateFavicon();
-});
-
-chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'sync') {
-        let shouldRestart = false;
-
-        if (changes.clickInterval) {
-            clickInterval = changes.clickInterval.newValue;
-            shouldRestart = true;
+        if (autoClickEnabled) {
+            startAutoClicker();
         }
-        if (changes.autoClickEnabled) {
-            autoClickEnabled = changes.autoClickEnabled.newValue;
-            shouldRestart = true;
-        }
-        if (changes.focusSimEnabled) {
-            focusSimEnabled = changes.focusSimEnabled.newValue;
-            syncFocusSim();
-            updateFavicon();
-        }
-        if (shouldRestart) {
-            if (autoClickEnabled) {
-                startAutoClicker();
-            } else {
-                stopAutoClicker();
+
+        // Wyślij stan skupienia do MAIN world (scroll_patch.js)
+        syncFocusSim();
+
+        insertDownloadButtonsAndModifyTitles();
+        updateTitle();
+        updateFavicon();
+    });
+
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (!isContextValid()) return;
+        if (namespace === 'sync') {
+            let shouldRestart = false;
+
+            if (changes.clickInterval) {
+                clickInterval = changes.clickInterval.newValue;
+                shouldRestart = true;
+            }
+            if (changes.autoClickEnabled) {
+                autoClickEnabled = changes.autoClickEnabled.newValue;
+                shouldRestart = true;
+            }
+            if (changes.focusSimEnabled) {
+                focusSimEnabled = changes.focusSimEnabled.newValue;
+                syncFocusSim();
+                updateFavicon();
+            }
+            if (shouldRestart) {
+                if (autoClickEnabled) {
+                    startAutoClicker();
+                } else {
+                    stopAutoClicker();
+                }
             }
         }
-    }
-});
+    });
+} catch (_) {
+    // Kontekst wtyczki nieważny przy starcie — stary content script
+}
 
 function syncFocusSim() {
     window.postMessage({ type: "WSKZ_FOCUS_SIM_TOGGLE", enabled: focusSimEnabled }, "*");
@@ -465,32 +471,36 @@ function saveProgressSnapshot() {
 
     if (!initialDataLoaded) {
         initialDataLoaded = true;
-        chrome.storage.local.get(['wskz_lastVisit'], (result) => {
-            if (chrome.runtime.lastError) return;
-            const lastVisit = result.wskz_lastVisit || {};
-            const prev = lastVisit[lessonKey];
+        try {
+            chrome.storage.local.get(['wskz_lastVisit'], (result) => {
+                if (chrome.runtime.lastError || !isContextValid()) return;
+                const lastVisit = result.wskz_lastVisit || {};
+                const prev = lastVisit[lessonKey];
 
-            const materialsWithInit = data.materials.map(m => {
-                const prevMat = prev && prev.materials ? prev.materials.find(p => p.id === m.id) : null;
-                return { ...m, initialPercent: prevMat ? prevMat.percent : m.percent };
+                const materialsWithInit = data.materials.map(m => {
+                    const prevMat = prev && prev.materials ? prev.materials.find(p => p.id === m.id) : null;
+                    return { ...m, initialPercent: prevMat ? prevMat.percent : m.percent };
+                });
+                const initialLessonPercent = prev ? (prev.lessonPercent ?? data.lessonPercent) : data.lessonPercent;
+
+                cachedInitials = { materials: materialsWithInit.map(m => ({ id: m.id, initialPercent: m.initialPercent })), initialLessonPercent };
+
+                try {
+                    chrome.storage.local.set({
+                        [sessionStorageKey]: {
+                            sessionId,
+                            lessonKey,
+                            lessonTitle: data.lessonTitle,
+                            openedAt: sessionOpenedAt,
+                            updatedAt: Date.now(),
+                            materials: materialsWithInit,
+                            lessonPercent: data.lessonPercent,
+                            initialLessonPercent
+                        }
+                    });
+                } catch (_) {}
             });
-            const initialLessonPercent = prev ? (prev.lessonPercent ?? data.lessonPercent) : data.lessonPercent;
-
-            cachedInitials = { materials: materialsWithInit.map(m => ({ id: m.id, initialPercent: m.initialPercent })), initialLessonPercent };
-
-            chrome.storage.local.set({
-                [sessionStorageKey]: {
-                    sessionId,
-                    lessonKey,
-                    lessonTitle: data.lessonTitle,
-                    openedAt: sessionOpenedAt,
-                    updatedAt: Date.now(),
-                    materials: materialsWithInit,
-                    lessonPercent: data.lessonPercent,
-                    initialLessonPercent
-                }
-            });
-        });
+        } catch (_) { cleanupOnInvalidContext(); }
         return;
     }
 
@@ -501,18 +511,20 @@ function saveProgressSnapshot() {
         return { ...m, initialPercent: init ? init.initialPercent : m.percent };
     });
 
-    chrome.storage.local.set({
-        [sessionStorageKey]: {
-            sessionId,
-            lessonKey,
-            lessonTitle: data.lessonTitle,
-            openedAt: sessionOpenedAt,
-            updatedAt: Date.now(),
-            materials: materialsWithInit,
-            lessonPercent: data.lessonPercent,
-            initialLessonPercent: cachedInitials.initialLessonPercent
-        }
-    });
+    try {
+        chrome.storage.local.set({
+            [sessionStorageKey]: {
+                sessionId,
+                lessonKey,
+                lessonTitle: data.lessonTitle,
+                openedAt: sessionOpenedAt,
+                updatedAt: Date.now(),
+                materials: materialsWithInit,
+                lessonPercent: data.lessonPercent,
+                initialLessonPercent: cachedInitials.initialLessonPercent
+            }
+        });
+    } catch (_) { cleanupOnInvalidContext(); }
 }
 
 // =========================================================================
@@ -571,20 +583,25 @@ function finalizeSession() {
         ratePerHour: durationMin > 0 && lessonDelta > 0 ? Math.round(lessonDelta / durationMin * 60 * 100) / 100 : 0
     };
 
-    chrome.storage.local.get(['wskz_sessions', 'wskz_lastVisit'], (result) => {
-        const sessions = result.wskz_sessions || [];
-        sessions.push(sessionEntry);
+    try {
+        chrome.storage.local.get(['wskz_sessions', 'wskz_lastVisit'], (result) => {
+            if (chrome.runtime.lastError || !isContextValid()) return;
+            const sessions = result.wskz_sessions || [];
+            sessions.push(sessionEntry);
 
-        const lastVisit = result.wskz_lastVisit || {};
-        lastVisit[lessonKey] = {
-            lessonPercent: data.lessonPercent,
-            materials: data.materials.map(m => ({ id: m.id, percent: m.percent })),
-            visitedAt: now
-        };
+            const lastVisit = result.wskz_lastVisit || {};
+            lastVisit[lessonKey] = {
+                lessonPercent: data.lessonPercent,
+                materials: data.materials.map(m => ({ id: m.id, percent: m.percent })),
+                visitedAt: now
+            };
 
-        chrome.storage.local.set({ wskz_sessions: sessions, wskz_lastVisit: lastVisit });
-        chrome.storage.local.remove(sessionStorageKey);
-    });
+            try {
+                chrome.storage.local.set({ wskz_sessions: sessions, wskz_lastVisit: lastVisit });
+                chrome.storage.local.remove(sessionStorageKey);
+            } catch (_) {}
+        });
+    } catch (_) {}
 }
 
 window.addEventListener('beforeunload', finalizeSession);

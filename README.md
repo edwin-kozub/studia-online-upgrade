@@ -42,6 +42,37 @@ Kliknij ikonę wtyczki, zaznacz Auto-Klikacz i ustaw interwał w sekundach. Zmia
 
 ## Changelog
 
+### v1.6 — Ochrona wideo w tle + adaptacja do zmian platformy
+
+**Co się stało:** Platforma zaktualizowała skrypt śledzenia (~21 marca 2026). Zmieniono architekturę z osobnych timerów per materiał na jeden główny timer z przełącznikiem aktywnego materiału. Efekt uboczny: gdy przeglądarka wstrzymuje wideo w tle, platforma przełącza śledzenie na PDF — procenty wideo przestają rosnąć.
+
+**Co naprawia ta wersja:**
+
+- **Wideo liczy się w tle** — wtyczka blokuje wstrzymanie wideo przez przeglądarkę gdy karta jest w tle. Odtwarzacz działa nieprzerwanie, a procenty realizacji wideo rosną normalnie.
+- **Auto-wznowienie** — jeśli przeglądarka mimo wszystko wstrzyma wideo, wtyczka automatycznie je wznawia co 3 sekundy.
+- **Symulacja postępu** — nawet gdy natywne odtwarzanie jest zablokowane, wtyczka symuluje rosnący czas wideo, zapewniając poprawne ticki do serwera.
+- **Blokada przełączenia na PDF** — event `pause` wywołany przez przeglądarkę (nie przez użytkownika) jest przechwytywany i nie dociera do kodu platformy, więc tracking pozostaje na wideo.
+
+**Zmiany na platformie wykryte w tej wersji:**
+
+| Element | Stara wersja (v=1772547442) | Nowa wersja (v=1774348103) |
+|---------|---------------------------|--------------------------|
+| Architektura timerów | `startInterval()`/`stopInterval()` per materiał | Jeden `masterInterval` + `activeMaterial` |
+| Przy blur | `stopAllIntervals()` | Flaga `isVisible = false` (timer ciągle bije) |
+| Przy focus | `startActiveIntervals()` | Flaga `isVisible = true` |
+| Przy pause wideo | `stopInterval(video); startActiveIntervals()` | `activeMaterial = materials.pdf` |
+| UI statusu | Prosty toggle | + `IntersectionObserver` dla sticky bar |
+
+**Szczegóły techniczne (v1.6):**
+
+- `scroll_patch.js` — nowy Moduł 4 (ochrona wideo):
+  - 4a: Override `HTMLMediaElement.prototype.pause` — blokada browser-initiated pauz (rozróżnienie przez prawdziwy `document.hidden`)
+  - 4b: Przechwycenie eventu `pause` w fazie capture — `stopImmediatePropagation()` dla pauz przeglądarki
+  - 4c: Tracking stanu `__wskzWasPlaying` per element `<video>`
+  - 4d: Heartbeat auto-resume co 3s dla wstrzymanych wideo
+  - 4e: Override `currentTime` getter/setter — symulacja rosnącego czasu gdy natywne odtwarzanie zablokowane (`Math.max(real, simulated)`)
+- Zaktualizowano komentarze mechanizmu platformy (masterInterval, activeMaterial)
+
 ### v1.5 — Anty-throttling: pełna prędkość naliczania czasu w tle
 
 **Problem:** Przeglądarki Chromium (Chrome, Brave, Edge) po ~5 minutach w tle spowalniają timery strony do max 1 wywołania na minutę. Przez to czas nauki naliczał się nawet **60x wolniej** gdy karta była w tle — mimo włączonej symulacji skupienia.

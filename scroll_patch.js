@@ -16,11 +16,17 @@
     //  MODUŁ 1: Symulacja aktywnej karty (WARUNKOWA)
     // =========================================================================
     //
-    //  JAK DZIAŁA ŚLEDZENIE PLATFORMY:
-    //    Platforma (user-lesson-log-only-focus.min.js) co 1 sekundę sprawdza:
-    //      isVisible && getIsVisible()
-    //    Jeśli true → activeSeconds++ (lokalny licznik w przeglądarce)
-    //    Co N sekund (materialInterval z serwera, domyślnie 25) → POST /ajax/user-lesson-log-tick
+    //  JAK DZIAŁA ŚLEDZENIE PLATFORMY (v=1774348103, zmienione ~21.03.2026):
+    //    Platforma (user-lesson-log-only-focus.min.js) używa JEDNEGO masterInterval:
+    //      setInterval(() => {
+    //        if (isVisible && getIsVisible() && activeMaterial) {
+    //          activeMaterial.activeSeconds += 1;
+    //          // co materialInterval (25s) → POST /ajax/user-lesson-log-tick
+    //        }
+    //      }, 1000)
+    //
+    //    activeMaterial wskazuje na aktualny materiał (pdf/video/audio).
+    //    Przy video.pause → activeMaterial = materials.pdf (przełącza tracking!)
     //
     //    getIsVisible() sprawdza:
     //      Desktop: document.hasFocus()
@@ -154,6 +160,132 @@
             window.dispatchEvent(new Event('focus'));
         }
     }, 60000);
+
+    // =========================================================================
+    //  MODUŁ 4: Ochrona wideo w tle (v1.6)
+    // =========================================================================
+    //
+    //  PROBLEM: Platforma (v=1774348103) zmieniła mechanizm śledzenia:
+    //    STARY: osobne setInterval() per materiał (startInterval/stopInterval)
+    //    NOWY:  jeden masterInterval + zmienna activeMaterial
+    //
+    //    Gdy wideo gra → activeMaterial = materials.video[id]
+    //    Gdy wideo pauzuje → activeMaterial = materials.pdf
+    //
+    //    Chromium/Brave w tle wstrzymuje <video> na poziomie natywnym
+    //    (niezależnie od JS API). To powoduje:
+    //      1. Event 'pause' → platforma przełącza na PDF
+    //      2. currentTime stoi → serwer nie zalicza postępu wideo
+    //
+    //  STRATEGIA:
+    //    A) Blokada pause() wywoływanego przez przeglądarkę (nie przez użytkownika)
+    //    B) Blokada eventu 'pause' gdy karta jest naprawdę ukryta
+    //    C) Auto-wznowienie wideo jeśli mimo to zostanie wstrzymane
+    //    D) Symulacja rosnącego currentTime gdy odtwarzanie jest zablokowane
+    // =========================================================================
+
+    (function installVideoProtection() {
+        // Dostęp do PRAWDZIWEGO document.hidden (nasz patch zwraca false)
+        var realHidden = origHiddenDesc
+            ? function () { return origHiddenDesc.get.call(document); }
+            : function () { return false; };
+
+        // --- 4a. Blokada browser-initiated pause ---
+        var origPause = HTMLMediaElement.prototype.pause;
+        HTMLMediaElement.prototype.pause = function () {
+            if (window.__wskzFocusSimEnabled &&
+                this.tagName === 'VIDEO' &&
+                this.__wskzWasPlaying &&
+                realHidden()) {
+                // Pauza pochodzi od przeglądarki (karta naprawdę ukryta) — blokujemy
+                return;
+            }
+            return origPause.call(this);
+        };
+
+        // --- 4b. Blokada eventu 'pause' trafiającego do platformy ---
+        //     Zabezpieczenie gdy przeglądarka ominie nasz patch pause()
+        document.addEventListener('pause', function (e) {
+            if (window.__wskzFocusSimEnabled &&
+                e.target.tagName === 'VIDEO' &&
+                e.target.__wskzWasPlaying &&
+                realHidden()) {
+                e.stopImmediatePropagation();
+            }
+        }, true);
+
+        // --- 4c. Śledzenie stanu odtwarzania ---
+        document.addEventListener('play', function (e) {
+            if (e.target.tagName === 'VIDEO') {
+                e.target.__wskzWasPlaying = true;
+                e.target.__wskzLastPlayTime = Date.now();
+                e.target.__wskzLastCurrentTime = e.target.currentTime;
+                e.target.__wskzPlaybackRate = e.target.playbackRate || 1;
+            }
+        }, true);
+
+        document.addEventListener('pause', function (e) {
+            if (e.target.tagName === 'VIDEO') {
+                // Tylko gdy fokus sim wyłączony LUB karta widoczna
+                // → normalna pauza użytkownika
+                if (!window.__wskzFocusSimEnabled || !realHidden()) {
+                    e.target.__wskzWasPlaying = false;
+                }
+            }
+        }, true);
+
+        // --- 4d. Auto-wznowienie wideo w tle ---
+        setInterval(function () {
+            if (!window.__wskzFocusSimEnabled) return;
+
+            var videos = document.querySelectorAll('video');
+            for (var i = 0; i < videos.length; i++) {
+                var v = videos[i];
+                if (v.__wskzWasPlaying && v.paused) {
+                    v.play().catch(function () {});
+                }
+            }
+        }, 3000);
+
+        // --- 4e. Symulacja currentTime gdy wideo zablokowane przez przeglądarkę ---
+        var origCTDesc = Object.getOwnPropertyDescriptor(
+            HTMLMediaElement.prototype, 'currentTime'
+        );
+
+        if (origCTDesc && origCTDesc.get) {
+            Object.defineProperty(HTMLMediaElement.prototype, 'currentTime', {
+                get: function () {
+                    var real = origCTDesc.get.call(this);
+
+                    // Jeśli wideo powinno grać ale jest wstrzymane natywnie
+                    if (window.__wskzFocusSimEnabled &&
+                        this.tagName === 'VIDEO' &&
+                        this.__wskzWasPlaying &&
+                        realHidden()) {
+                        var elapsed = (Date.now() - (this.__wskzLastPlayTime || Date.now())) / 1000;
+                        var rate = this.__wskzPlaybackRate || 1;
+                        var simulated = (this.__wskzLastCurrentTime || 0) + elapsed * rate;
+                        // Nie przekraczaj duration
+                        var maxTime = isFinite(this.duration) ? this.duration : Infinity;
+                        var capped = Math.min(simulated, maxTime);
+                        // Bierz wyższą wartość: real (jeśli wideo jakoś działa) lub symulacja
+                        return Math.max(real, capped);
+                    }
+
+                    return real;
+                },
+                set: function (val) {
+                    if (origCTDesc.set) {
+                        origCTDesc.set.call(this, val);
+                    }
+                    // Aktualizuj bazę symulacji
+                    this.__wskzLastPlayTime = Date.now();
+                    this.__wskzLastCurrentTime = val;
+                },
+                configurable: true
+            });
+        }
+    })();
 
     // =========================================================================
     //  MODUŁ 2: Anty-scroll (blokowanie przewijania przy auto-kliku)

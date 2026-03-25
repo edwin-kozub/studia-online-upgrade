@@ -4,6 +4,16 @@ let focusSimEnabled = true;
 let nextClickTimer = null;
 
 // =========================================================================
+//  Guard: wykrywanie unieważnionego kontekstu po przeładowaniu wtyczki
+// =========================================================================
+
+function isContextValid() {
+    try { return !!chrome.runtime?.id; } catch (_) { return false; }
+}
+
+let _mainIntervalId = null;
+
+// =========================================================================
 //  Śledzenie postępu nauki
 // =========================================================================
 const sessionOpenedAt = Date.now();
@@ -262,6 +272,7 @@ function insertDownloadButtonsAndModifyTitles() {
         const finalFilename = buildFilename(baseName, 'pdf');
 
         const btn = createSmallDownloadButton('Pobierz PDF', () => {
+            if (!isContextValid()) return;
             chrome.runtime.sendMessage({ action: 'download', url: pdfUrl, filename: finalFilename });
         });
 
@@ -447,12 +458,15 @@ function updateTitle() {
 // =========================================================================
 
 function saveProgressSnapshot() {
+    if (!isContextValid()) { cleanupOnInvalidContext(); return; }
+
     const data = collectProgressData();
     if (!data) return;
 
     if (!initialDataLoaded) {
         initialDataLoaded = true;
         chrome.storage.local.get(['wskz_lastVisit'], (result) => {
+            if (chrome.runtime.lastError) return;
             const lastVisit = result.wskz_lastVisit || {};
             const prev = lastVisit[lessonKey];
 
@@ -506,10 +520,12 @@ function saveProgressSnapshot() {
 // =========================================================================
 
 function finalizeSession() {
+    if (!isContextValid()) return;
+
     const now = Date.now();
     const durationMin = Math.round((now - sessionOpenedAt) / 60000);
     if (durationMin < 1) {
-        chrome.storage.local.remove(sessionStorageKey);
+        try { chrome.storage.local.remove(sessionStorageKey); } catch (_) {}
         return;
     }
 
@@ -520,7 +536,7 @@ function finalizeSession() {
 
     const data = collectProgressData();
     if (!data || !cachedInitials) {
-        chrome.storage.local.remove(sessionStorageKey);
+        try { chrome.storage.local.remove(sessionStorageKey); } catch (_) {}
         return;
     }
 
@@ -613,10 +629,22 @@ function updateFavicon() {
 }
 
 // =========================================================================
+//  Cleanup: zatrzymaj wszystko gdy kontekst wtyczki zostanie unieważniony
+//  (np. po przeładowaniu rozszerzenia bez odświeżania karty)
+// =========================================================================
+
+function cleanupOnInvalidContext() {
+    if (_mainIntervalId) { clearInterval(_mainIntervalId); _mainIntervalId = null; }
+    if (nextClickTimer) { clearInterval(nextClickTimer); nextClickTimer = null; }
+    console.log('WSKZ: kontekst wtyczki unieważniony — interwały zatrzymane. Odśwież kartę.');
+}
+
+// =========================================================================
 //  Interwał: aktualizacja tytułu, przycisków, favicon
 // =========================================================================
 
-setInterval(() => {
+_mainIntervalId = setInterval(() => {
+    if (!isContextValid()) { cleanupOnInvalidContext(); return; }
     insertDownloadButtonsAndModifyTitles();
     updateTitle();
     saveProgressSnapshot();

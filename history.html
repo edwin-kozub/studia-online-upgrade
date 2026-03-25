@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>WSKZ — Historia nauki</title>
+    <link rel="stylesheet" href="history.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Historia nauki</h1>
+
+        <!-- Filtry + widok -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="date-from">Od:</label>
+                <input type="date" id="date-from">
+            </div>
+            <div class="filter-group">
+                <label for="date-to">Do:</label>
+                <input type="date" id="date-to">
+            </div>
+            <div class="filter-group">
+                <label for="lesson-filter">Lekcja:</label>
+                <select id="lesson-filter">
+                    <option value="">Wszystkie</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="view-mode">Widok:</label>
+                <select id="view-mode">
+                    <option value="chrono">Chronologiczny</option>
+                    <option value="lesson">Grupuj per lekcja</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Statystyki -->
+        <div class="summary" id="summary">
+            <span id="stat-sessions">Sesje: 0</span>
+            <span id="stat-time">Czas: 0min</span>
+            <span id="stat-rate">Sr. tempo: —</span>
+        </div>
+
+        <!-- Tabela -->
+        <table id="history-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Lekcja</th>
+                    <th>Czas</th>
+                    <th>Godziny</th>
+                    <th>Start%</th>
+                    <th>Koniec%</th>
+                    <th>&Delta;%</th>
+                    <th>%/min</th>
+                    <th>%/h</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+
+        <div id="empty-msg" class="empty-msg" style="display:none">Brak zapisanych sesji.</div>
+
+        <!-- Eksport i zarządzanie -->
+        <div class="actions">
+            <button id="export-json" class="btn">Eksportuj JSON</button>
+            <button id="export-csv" class="btn">Eksportuj CSV</button>
+            <button id="clear-history" class="btn btn-danger">Wyczysc historie</button>
+        </div>
+    </div>
+    <script src="history.js"></script>
+</body>
+
+</html>

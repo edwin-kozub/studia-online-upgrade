@@ -1,6 +1,19 @@
 (function () {
     // =========================================================================
-    //  MODUŁ 1: Symulacja aktywnej karty (oszukiwanie systemu śledzenia WSKZ)
+    //  FLAG: sterowanie symulacją skupienia (domyślnie WŁĄCZONA)
+    //  content.js wysyła WSKZ_FOCUS_SIM_TOGGLE po odczytaniu ustawień z storage
+    // =========================================================================
+
+    window.__wskzFocusSimEnabled = true;
+
+    window.addEventListener("message", (event) => {
+        if (event.source === window && event.data.type === "WSKZ_FOCUS_SIM_TOGGLE") {
+            window.__wskzFocusSimEnabled = !!event.data.enabled;
+        }
+    });
+
+    // =========================================================================
+    //  MODUŁ 1: Symulacja aktywnej karty (WARUNKOWA)
     // =========================================================================
     //
     //  JAK DZIAŁA ŚLEDZENIE PLATFORMY:
@@ -13,81 +26,60 @@
     //      Desktop: document.hasFocus()
     //      Mobile:  !document.hidden
     //
-    //    Zmienna isVisible jest ustawiana przez event listenery:
-    //      blur/pagehide     → isVisible = false, stopAllIntervals(), sendTick(BLUR)
-    //      focus/pageshow    → isVisible = true,  startActiveIntervals(), sendTick(FOCUS)
-    //      visibilitychange  → jak wyżej, w zależności od document.hidden
-    //
-    //  NASZA STRATEGIA:
-    //    1. Nadpisujemy hasFocus(), hidden, visibilityState → getIsVisible() zawsze true
-    //    2. Blokujemy blur/visibilitychange eventy → isVisible nigdy nie zmieni się na false
-    //    3. Efekt: platforma sama inkrementuje licznik co 1s i wysyła ticki co 25s
-    //       My NIE musimy sami nic wysyłać — kod platformy robi to za nas.
-    //
     //  WAŻNE: scroll_patch.js musi działać w world: "MAIN" i run_at: "document_start"
     //  żeby nadpisania były gotowe ZANIM załaduje się kod platformy.
     // =========================================================================
 
-    // --- 1a. Nadpisanie document.hasFocus() → zawsze true ---
-    //    To jest KLUCZOWE — platforma sprawdza to co sekundę w interwale.
+    // --- 1a. Nadpisanie document.hasFocus() ---
+    const origHasFocus = Document.prototype.hasFocus;
     Document.prototype.hasFocus = function () {
-        return true;
+        if (window.__wskzFocusSimEnabled) return true;
+        return origHasFocus.call(this);
     };
 
-    // --- 1b. Nadpisanie document.hidden → zawsze false ---
-    //    Używane na urządzeniach mobilnych (iPad/iPhone/Android).
+    // --- 1b. Nadpisanie document.hidden ---
+    const origHiddenDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden');
     Object.defineProperty(Document.prototype, 'hidden', {
         get: function () {
-            return false;
+            if (window.__wskzFocusSimEnabled) return false;
+            return origHiddenDesc ? origHiddenDesc.get.call(this) : false;
         },
         configurable: true
     });
 
-    // --- 1c. Nadpisanie document.visibilityState → zawsze "visible" ---
-    //    Spójność z hidden — niektóre przeglądarki mogą sprawdzać oba.
+    // --- 1c. Nadpisanie document.visibilityState ---
+    const origVisDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'visibilityState');
     Object.defineProperty(Document.prototype, 'visibilityState', {
         get: function () {
-            return 'visible';
+            if (window.__wskzFocusSimEnabled) return 'visible';
+            return origVisDesc ? origVisDesc.get.call(this) : 'visible';
         },
         configurable: true
     });
 
-    // --- 2. Blokowanie eventów blur / visibilitychange / pagehide ---
-    //    Przechwytujemy w fazie CAPTURE (true), zanim listenery platformy
-    //    zdążą ustawić isVisible = false i wywołać stopAllIntervals().
-    //    Bez tego: platforma wysłałaby tick BLUR i zatrzymała licznik.
-
+    // --- 2. Blokowanie eventów blur / visibilitychange / pagehide (WARUNKOWE) ---
     window.addEventListener('blur', (e) => {
-        e.stopImmediatePropagation();
+        if (window.__wskzFocusSimEnabled) e.stopImmediatePropagation();
     }, true);
 
     window.addEventListener('pagehide', (e) => {
-        e.stopImmediatePropagation();
+        if (window.__wskzFocusSimEnabled) e.stopImmediatePropagation();
     }, true);
 
     document.addEventListener('visibilitychange', (e) => {
-        e.stopImmediatePropagation();
+        if (window.__wskzFocusSimEnabled) e.stopImmediatePropagation();
     }, true);
 
-    // --- 3. Zabezpieczenie: periodyczny focus heartbeat ---
-    //    W 99% przypadków powyższe nadpisania wystarczą. Heartbeat jest
-    //    asekuracją na wypadek gdyby jakiś edge case (np. alert systemowy)
-    //    spowodował że platforma ustawiła isVisible = false mimo naszych blokad.
-    //
-    //    onFocusEvent w platformie sprawdza: if (!isVisible) { ... }
-    //    Jeśli isVisible jest true (bo blur zablokowany), focus event to no-op.
-    //    Więc heartbeat nie generuje duplikatów ticków FOCUS na serwerze.
-
+    // --- 3. Heartbeat (WARUNKOWY) ---
     setInterval(() => {
-        window.dispatchEvent(new Event('focus'));
-    }, 60000); // co 60s — rzadko, tylko jako safety net
+        if (window.__wskzFocusSimEnabled) {
+            window.dispatchEvent(new Event('focus'));
+        }
+    }, 60000);
 
     // =========================================================================
     //  MODUŁ 2: Anty-scroll (blokowanie przewijania przy auto-kliku)
     // =========================================================================
-    //  Gdy content.js klika przycisk "następna lekcja", strona scrolluje
-    //  do elementu. Ten moduł tymczasowo blokuje scroll po sygnale
-    //  WSKZ_PREVENT_SCROLL (800ms okno blokady).
 
     let preventScroll = false;
 
@@ -134,19 +126,16 @@
     patchJQuery();
 
     // =========================================================================
-    //  MODUŁ 3: Automatyczne zamknięcie modala "isActiveModal"
+    //  MODUŁ 3: Automatyczne zamknięcie modala "isActiveModal" (WARUNKOWE)
     // =========================================================================
-    //  Platforma pokazuje modal ostrzeżenia "Nie skupiasz się na nauce" przy
-    //  utracie fokusu (raz na sesję, sprawdzane przez sessionStorage).
-    //  Na wypadek gdyby pojawił się mimo naszych blokad — zamykamy go
-    //  i ustawiamy sessionStorage żeby nie pojawiał się ponownie.
 
     function suppressActiveModal() {
-        // Ustaw sessionStorage od razu — platforma sprawdza to przed wyświetleniem
-        sessionStorage.setItem("isActiveModal", "1");
+        if (window.__wskzFocusSimEnabled) {
+            sessionStorage.setItem("isActiveModal", "1");
+        }
 
-        // Observer jako backup — gdyby modal się jednak pojawił
         const observer = new MutationObserver(() => {
+            if (!window.__wskzFocusSimEnabled) return;
             const modal = document.getElementById('isActiveModal');
             if (modal && (modal.style.display === 'block' || modal.classList.contains('show'))) {
                 const closeBtn = modal.querySelector('[data-dismiss="modal"], .close, .btn-close');

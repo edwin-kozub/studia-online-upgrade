@@ -9,17 +9,40 @@
 
 <body>
     <div class="container">
-        <h2>Ustawienia WSKZ</h2>
+        <h2>WSKZ</h2>
+
+        <!-- Sekcja postępu — generowana dynamicznie dla każdej aktywnej karty -->
+        <div class="section-header">Aktywne lekcje</div>
+        <div id="sessions-container"></div>
+        <div id="no-session" class="no-session" style="display:none">Otworz lekcje na studia-online.pl</div>
+
+        <a href="#" id="history-link" class="history-link">Historia nauki &rarr;</a>
+
+        <hr class="separator">
+
+        <!-- Ustawienia -->
+        <div class="section-header">Ustawienia</div>
 
         <div class="setting-row">
-            <label for="autoClickEnabled">Auto-klik (Następny):</label>
+            <label for="focusSimEnabled">Symulacja skupienia:</label>
+            <input type="checkbox" id="focusSimEnabled">
+        </div>
+
+        <div class="setting-row">
+            <label for="autoClickEnabled">Auto-klik (Nastepny):</label>
             <input type="checkbox" id="autoClickEnabled">
         </div>
 
         <div class="setting-row">
-            <label for="clickInterval">Interwał (sekundy):</label>
+            <label for="clickInterval">Interwal (sekundy):</label>
             <input type="number" id="clickInterval" min="1" value="60">
         </div>
+
+        <div class="setting-row disabled-row">
+            <label for="allowSimultaneousVideo">Symultaniczne wideo:</label>
+            <input type="checkbox" id="allowSimultaneousVideo" disabled>
+        </div>
+        <p class="hint">Video.js nie wspiera blokowania z poziomu wtyczki</p>
 
         <button id="saveBtn">Zapisz ustawienia</button>
         <div id="status"></div>

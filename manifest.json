@@ -1,18 +1,20 @@
 {
   "manifest_version": 3,
   "name": "WSKZ Auto Clicker & Downloader",
-  "version": "1.0",
+  "version": "1.4",
   "description": "Automatyzuje klikanie przycisku 'następny', pobieranie wideo (WebM) i PDF z platformy studia-online.pl",
   "permissions": [
     "storage",
     "downloads",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "tabs"
   ],
   "host_permissions": [
     "https://studia-online.pl/*",
     "https://*.studia-online.pl/*",
     "https://*.ultracloud.pl/*"
   ],
+  "options_page": "history.html",
   "action": {
     "default_popup": "popup.html"
   },

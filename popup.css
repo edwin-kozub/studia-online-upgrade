@@ -1,5 +1,7 @@
 body {
-    width: 250px;
+    width: 340px;
+    max-height: 560px;
+    overflow-y: auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 15px;
     background-color: #f7f9fa;
@@ -9,7 +11,7 @@ body {
 .container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 h2 {
@@ -21,6 +23,156 @@ h2 {
     text-align: center;
 }
 
+.section-header {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #0b5394;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.separator {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 4px 0;
+}
+
+/* Sessions container */
+#sessions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.session-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.session-card + .session-card {
+    border-top-color: #0b5394;
+}
+
+.lesson-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+
+.progress-label {
+    width: 72px;
+    flex-shrink: 0;
+    color: #555;
+    font-size: 0.75rem;
+}
+
+.progress-label .meta {
+    color: #999;
+    font-size: 0.65rem;
+}
+
+.progress-bar-container {
+    flex: 1;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #0b5394, #1a73e8);
+    transition: width 0.4s ease;
+    min-width: 0;
+}
+
+.lesson-row .progress-bar-fill {
+    background: linear-gradient(90deg, #2e7d32, #43a047);
+}
+
+.progress-pct {
+    width: 32px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.progress-delta {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    width: 42px;
+    text-align: right;
+}
+
+.delta-positive {
+    color: #2e7d32;
+}
+
+.delta-zero {
+    color: #999;
+}
+
+.delta-negative {
+    color: #c62828;
+}
+
+.session-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 0.72rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+.session-timer {
+    font-weight: 600;
+}
+
+.session-rate {
+    line-height: 1.35;
+    color: #0b5394;
+}
+
+.no-session {
+    font-size: 0.8rem;
+    color: #999;
+    text-align: center;
+    padding: 8px 0;
+    font-style: italic;
+}
+
+.history-link {
+    display: block;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #0b5394;
+    text-decoration: none;
+    padding: 4px 0;
+}
+
+.history-link:hover {
+    text-decoration: underline;
+}
+
+/* Settings */
 .setting-row {
     display: flex;
     justify-content: space-between;
@@ -54,4 +206,15 @@ button:hover {
     font-size: 0.9rem;
     text-align: center;
     min-height: 20px;
+}
+
+.disabled-row {
+    opacity: 0.4;
+}
+
+.hint {
+    margin: -6px 0 0 0;
+    font-size: 0.75rem;
+    color: #999;
+    font-style: italic;
 }

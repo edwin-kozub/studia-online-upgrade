@@ -42,6 +42,29 @@ Kliknij ikonę wtyczki, zaznacz Auto-Klikacz i ustaw interwał w sekundach. Zmia
 
 ## Changelog
 
+### v1.4 — Historia nauki, statystyki i monitoring sesji
+
+**Nowe funkcje:**
+
+- **Panel historii (Historia nauki)** — Dedykowana strona z podglądem wszystkich sesji nauki, filtrowaniem i szczegółowymi logami (dostępna przez "Opcje" rozszerzenia).
+- **Monitoring sesji w czasie rzeczywistym** — Pop-up wyświetla teraz aktywne timery dla każdej otwartej lekcji, pokazując czas spędzony i aktualny postęp (Delta %).
+- **Zaawansowane statystyki** — Automatyczne obliczanie tempa nauki (`%/min` i `%/h`) oraz przyrostu postępu dla całych lekcji i poszczególnych materiałów (PDF/Wideo).
+- **Eksport danych** — Możliwość pobrania pełnej historii nauki do formatu **JSON** lub **CSV** (gotowy do analizy w Excelu).
+- **Inteligentne zarządzanie sesjami** — Background worker automatycznie wykrywa zamknięcie kart i finalizuje sesje, zapobiegając utracie danych.
+
+**Zmiany techniczne:**
+
+- Dodano pliki `history.html`, `history.js`, `history.css`.
+- Przebudowano `background.js` (logika sprzątania sesji, obsługa nagłówków Referer dla `ultracloud.pl`).
+- Odświeżono interfejs `popup.html` i `popup.js` (live update aktywnych sesji).
+- Rozszerzono uprawnienia w `manifest.json` o `declarativeNetRequest` i `tabs`.
+
+### v1.2 — v1.3 — Prace rozwojowe
+
+- Stabilizacja mechanizmów Focus Simulation.
+- Ulepszona obsługa wielu zakładek jednocześnie.
+- Poprawki błędów w downloaderze.
+
 ### v1.1 — Symulacja aktywnej karty + nawigacja PDF bez scrollowania
 
 **Nowe funkcje:**

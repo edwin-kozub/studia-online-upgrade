@@ -1,0 +1,235 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fa;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #0b5394;
+    font-size: 1.5rem;
+    margin: 0 0 16px 0;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 8px;
+}
+
+/* Filtry */
+.filters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.filter-group input[type="date"],
+.filter-group select {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.filter-group select {
+    max-width: 250px;
+}
+
+/* Statystyki */
+.summary {
+    display: flex;
+    gap: 24px;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #e8f0fe;
+    border-radius: 6px;
+}
+
+/* Tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+thead th {
+    background: #0b5394;
+    color: white;
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 6px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: top;
+}
+
+tbody tr:hover {
+    background: #f0f4f8;
+}
+
+.lesson-cell {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.delta-positive {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.delta-negative {
+    color: #c62828;
+    font-weight: 600;
+}
+
+/* Wiersz szczegółów materiałów */
+.detail-row td {
+    padding: 0 6px 8px 6px;
+    background: #f9fbfd;
+    border-bottom: 2px solid #ddd;
+}
+
+.materials-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 12px;
+}
+
+.material-row {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.mat-label {
+    font-weight: 600;
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.mat-meta {
+    color: #888;
+    font-size: 0.75rem;
+    min-width: 50px;
+}
+
+.mat-rate {
+    color: #0b5394;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Widok grupowany */
+.group-header td {
+    background: #e8f0fe;
+    font-weight: 600;
+    border-bottom: 1px solid #bbd;
+}
+
+.group-detail {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.group-materials-header,
+.group-sessions-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0b5394;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.group-session-row {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: #555;
+    padding: 2px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* Przyciski */
+.btn-expand {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    color: #666;
+}
+
+.btn-expand:hover {
+    background: #e0e0e0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.btn {
+    padding: 8px 16px;
+    background-color: #0b5394;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn:hover {
+    background-color: #073763;
+}
+
+.btn-danger {
+    background-color: #c62828;
+}
+
+.btn-danger:hover {
+    background-color: #8e0000;
+}
+
+.empty-msg {
+    text-align: center;
+    color: #999;
+    padding: 32px 0;
+    font-size: 0.95rem;
+    font-style: italic;
+}

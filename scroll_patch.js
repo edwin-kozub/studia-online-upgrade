@@ -8,7 +8,21 @@
 
     window.addEventListener("message", (event) => {
         if (event.source === window && event.data.type === "WSKZ_FOCUS_SIM_TOGGLE") {
+            var wasEnabled = window.__wskzFocusSimEnabled;
             window.__wskzFocusSimEnabled = !!event.data.enabled;
+
+            // Resynchronizacja stanu platformy po przełączeniu
+            if (window.__wskzFocusSimEnabled && !wasEnabled) {
+                // Włączono → powiedz platformie że karta jest aktywna
+                window.dispatchEvent(new Event('focus'));
+            } else if (!window.__wskzFocusSimEnabled && wasEnabled) {
+                // Wyłączono → niech platforma zobaczy prawdziwy stan
+                if (origHasFocus.call(document)) {
+                    window.dispatchEvent(new Event('focus'));
+                } else {
+                    window.dispatchEvent(new Event('blur'));
+                }
+            }
         }
     });
 

@@ -25,18 +25,26 @@ document.addEventListener('DOMContentLoaded', () => {
         simultaneousVideoCheckbox.checked = items.allowSimultaneousVideo;
     });
 
-    // === Zapisz ustawienia ===
-    saveBtn.addEventListener('click', () => {
+    // === Auto-zapis checkboxów (natychmiastowy, bez klikania Zapisz) ===
+    function saveAllSettings(showStatus) {
         chrome.storage.sync.set({
             autoClickEnabled: autoClickCheckbox.checked,
             clickInterval: parseInt(intervalInput.value) || 60,
             focusSimEnabled: focusSimCheckbox.checked,
             allowSimultaneousVideo: simultaneousVideoCheckbox.checked
         }, () => {
-            statusDiv.textContent = 'Zapisano!';
-            setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+            if (showStatus) {
+                statusDiv.textContent = 'Zapisano!';
+                setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+            }
         });
-    });
+    }
+
+    focusSimCheckbox.addEventListener('change', () => saveAllSettings(true));
+    autoClickCheckbox.addEventListener('change', () => saveAllSettings(true));
+
+    // === Zapisz ustawienia (przycisk — dla interwału i reszty) ===
+    saveBtn.addEventListener('click', () => saveAllSettings(true));
 
     // === Historia nauki ===
     historyLink.addEventListener('click', (e) => {
@@ -78,8 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const [key, val] of Object.entries(storageData)) {
             if (!key.startsWith('wskz_active_')) continue;
             if (!val || !val.openedAt) continue;
-            // Odfiltruj stale sesje (> 15s bez updatu)
-            if (val.updatedAt && (now - val.updatedAt) > 15000) continue;
+            // Stale sesje > 2 min (background cleanup działa na 30s,
+            // ale popup trzyma dłużej żeby nie migotały)
+            if (val.updatedAt && (now - val.updatedAt) > 120000) continue;
             sessions.push(val);
         }
         // Sortuj — najstarsza (najdłużej otwarta) na górze
@@ -212,29 +221,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === Inicjalizacja ===
-    chrome.storage.local.get(null, (all) => {
-        renderAllSessions(extractActiveSessions(all));
-    });
+    function refreshSessions() {
+        chrome.storage.local.get(null, (all) => {
+            if (chrome.runtime.lastError) return;
+            renderAllSessions(extractActiveSessions(all));
+        });
+    }
 
-    // Timer — aktualizacja co sekundę (tylko timery, bez przebudowy DOM)
+    refreshSessions();
+
+    // Timer — aktualizacja co sekundę (timery + dane co 3 cykle)
+    let tickCount = 0;
     setInterval(() => {
+        tickCount++;
         const cards = sessionsContainer.querySelectorAll('.session-card');
         cards.forEach((card, i) => {
             if (activeSessions[i]) {
                 updateCardTimer(card, activeSessions[i]);
             }
         });
+        // Co 3s pełny refresh danych ze storage
+        if (tickCount % 3 === 0) refreshSessions();
     }, 1000);
 
-    // Live update — przebuduj tylko gdy zmieni się klucz wskz_active_*
+    // Live update — przebuduj gdy zmieni się klucz wskz_active_*
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace !== 'local') return;
         const hasActiveChange = Object.keys(changes).some(k => k.startsWith('wskz_active_'));
         if (!hasActiveChange) return;
-
-        // Przebuduj z aktualnych danych
-        chrome.storage.local.get(null, (all) => {
-            renderAllSessions(extractActiveSessions(all));
-        });
+        refreshSessions();
     });
 });
